@@ -4,7 +4,7 @@
 //                W R I T T E N   B Y   I M P E R A S   I G E N
 //
 //                             Version 20131018.0
-//                          Mon Oct 13 14:00:51 2014
+//                          Sat Oct 25 01:27:59 2014
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -23,7 +23,7 @@ static ppmBusPort busPorts[] = {
         .name            = "CFGBUS",
         .type            = PPM_SLAVE_PORT,
         .addrHi          = 0x3LL,
-        .mustBeConnected = 0,
+        .mustBeConnected = 1,
         .remappable      = 0,
         .description     = 0,
     },

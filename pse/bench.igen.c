@@ -4,7 +4,7 @@
 //                W R I T T E N   B Y   I M P E R A S   I G E N
 //
 //                             Version 20131018.0
-//                          Mon Oct 13 14:00:51 2014
+//                          Sat Oct 25 01:27:59 2014
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -48,6 +48,9 @@ static PPM_VIEW_CB(view_CFGBUS_AB0_CONTROL) {
 
 static void installSlavePorts(void) {
     handles.CFGBUS = ppmCreateSlaveBusPort("CFGBUS", 4);
+    if (!handles.CFGBUS) {
+        bhmMessage("E", "PPM_SPNC", "Could not connect port 'CFGBUS'");
+    }
 
 }
 

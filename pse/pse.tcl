@@ -16,8 +16,8 @@ iadddocumentation   -name Description -text "OVP guest-to-host benchmark periphe
     imodeladdfield        -name ISSUE_COPY    -bitoffset 31 -width 1 -access rw
       iadddocumentation -name Description -text "Issue a vmirt copy"
 
-  imodeladdbusslaveport -name DATABUS -size 0x4000000 -mustbeconnected
+  imodeladdbusslaveport -name DATABUS -size 0x4000000 -mustbeconnected -remappable
     iadddocumentation -name Description -text "64MiB of test memory"
-  imodeladdaddressblock -name AB1  -width 32 -offset 0 -size 0x4000000
-  imodeladdlocalmemory  -name DATA -size 0x4000000
+  #imodeladdaddressblock -name AB1  -width 32 -offset 0 -size 0x4000000
+  #imodeladdlocalmemory  -name DATA -size 0x4000000 -addressblock DATABUS/AB1 -writefunction writeData
 

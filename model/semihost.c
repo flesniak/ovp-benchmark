@@ -1,20 +1,15 @@
-#include <byteswap.h>
-#include <gd.h>
-#include <pthread.h>
+#include <math.h>
 #include <stdbool.h>
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
+#include <sys/time.h>
 
 #include <vmi/vmiMessage.h>
 #include <vmi/vmiOSAttrs.h>
 #include <vmi/vmiOSLib.h>
 #include <vmi/vmiPSE.h>
 #include <vmi/vmiTypes.h>
-
-#include <sys/time.h>
 
 #include "../bench.h"
 
@@ -32,6 +27,7 @@ typedef struct vmiosObjectS {
   memDomainP guestDomain;
   unsigned char* buffer;
   Uns32 bytesWritten;
+  Uns32 bufAddr;
 } vmiosObject;
 
 static void getArg(vmiProcessorP processor, vmiosObjectP object, Uns32 *index, void* result, Uns32 argSize) {
@@ -72,7 +68,7 @@ void mapMemory(vmiosObjectP object, bool mapOrUnmap) {
   if( mapOrUnmap ) {
     vmiMessage("I", "BENCH_SH", "Mapping external vmem at addr 0x%08x", BENCH_DATA_DEFAULT_ADDRESS);
     vmipseAliasMemory(object->guestDomain, BENCH_DATA_BUS_NAME, BENCH_DATA_DEFAULT_ADDRESS, BENCH_DATA_DEFAULT_ADDRESS+BENCH_DATA_SIZE-1);
-  } else  {
+  } else {
     vmiMessage("I", "BENCH_SH", "Unaliasing previously mapped memory at 0x%08x", BENCH_DATA_DEFAULT_ADDRESS);
     vmirtUnaliasMemory(object->guestDomain, BENCH_DATA_DEFAULT_ADDRESS, BENCH_DATA_DEFAULT_ADDRESS+BENCH_DATA_SIZE-1);
     vmirtMapMemory(object->guestDomain, BENCH_DATA_DEFAULT_ADDRESS, BENCH_DATA_DEFAULT_ADDRESS+BENCH_DATA_SIZE-1, MEM_RAM);
@@ -90,8 +86,9 @@ static VMIOS_INTERCEPT_FN(calibrate) {
     if( object->calibCount < 100 )
       vmiMessage("W", "BENCH_SH", "Calibration end with less than 100 dummy calls (%d). Re-run with more calls!", object->calibCount);
     object->calibration = timevalDiff(&object->start, &object->end);
-    vmiMessage("I", "BENCH_SH", "Bench calibrated to %d microseconds (%d calls took %d us)", object->calibration/object->calibCount, object->calibCount, object->calibration);
-    object->calibration /= object->calibCount;
+    Uns32 msecs = ceil((float)object->calibration / object->calibCount);
+    vmiMessage("I", "BENCH_SH", "Bench calibrated to %d microseconds (%d calls took %d us)", msecs, object->calibCount, object->calibration);
+    object->calibration = msecs;
   }
 }
 
@@ -110,6 +107,7 @@ static VMIOS_INTERCEPT_FN(copyCallback) {
 static VMIOS_INTERCEPT_FN(testCallback) {
   Uns32 enable = 0, index = 0;
   GET_ARG(processor, object, index, enable);
+  GET_ARG(processor, object, index, object->bufAddr);
   if( enable ) { //start test
     object->bytesWritten = 0;
     gettimeofday(&object->start, 0);
@@ -117,6 +115,7 @@ static VMIOS_INTERCEPT_FN(testCallback) {
     gettimeofday(&object->end, 0);
     Uns32 diff = timevalDiff(&object->start, &object->end);
     vmiMessage("I", "BENCH_SH", "Wrote %d bytes in %f seconds, equals %f MiB/s", object->bytesWritten, (double)(diff-object->calibration)/1000000, (double)1.04858*object->bytesWritten/(diff-object->calibration));
+    mapMemory(object, 0);
   }
 }
 
@@ -138,7 +137,7 @@ static VMIOS_INTERCEPT_FN(testNative) {
   GET_ARG(processor, object, index, enable);
   if( enable ) { //start test
     object->bytesWritten = 0;
-    mapMemory(object, 1); vmiMessage("I", "BENCH_SH", "mapping done");
+    mapMemory(object, 1);
     gettimeofday(&object->start, 0);
   } else { //end test
     gettimeofday(&object->end, 0);
@@ -153,9 +152,13 @@ static VMIOS_INTERCEPT_FN(writeData) {
   Uns32 addr = 0, data = 0, index = 0;
   GET_ARG(processor, object, index, addr);
   GET_ARG(processor, object, index, data);
-  vmiMessage("I", "BENCH_SH", "writeData addr 0x%08x data 0x%08x max 0x%08x", addr, data, BENCH_DATA_SIZE);
-  *((unsigned int*)object->buffer+addr) = data;
-  object->bytesWritten++;
+  index = addr-object->bufAddr; //just re-use index variable
+  /*if( index >= 16750000 )
+    vmiMessage("I", "BENCH_SH", "writeData addr 0x%08x bufAddr 0x%08x data 0x%08x index 0x%08x", addr, object->bufAddr, data, index);*/
+  if( index >= BENCH_DATA_SIZE )
+    vmiMessage("F", "BENCH_SH", "writeData out of bounds index 0x%08x", index);
+  *((unsigned int*)(object->buffer+index)) = data;
+  object->bytesWritten += 4;
 }
 
 static VMIOS_CONSTRUCTOR_FN(constructor) {

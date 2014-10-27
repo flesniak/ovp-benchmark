@@ -4,7 +4,7 @@
 //                W R I T T E N   B Y   I M P E R A S   I G E N
 //
 //                             Version 20131018.0
-//                          Mon Oct 13 14:00:51 2014
+//                          Sat Oct 25 01:27:59 2014
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -33,6 +33,8 @@ typedef struct CFGBUS_AB0_dataS {
             unsigned TEST_CALLBACK : 1;
             unsigned TEST_RTCOPY : 1;
             unsigned TEST_NATIVE : 1;
+            unsigned __pad4 : 27;
+            unsigned ISSUE_COPY : 1;
         } bits;
     } CONTROL;
 } CFGBUS_AB0_dataT, *CFGBUS_AB0_dataTP;

@@ -1,6 +1,8 @@
 #ifndef BENCH_H
 #define BENCH_H
 
+//#define CALLBACK_TEST //comment out to do a callback test, no other tests will be run (due to design of ovp)
+
 #define BENCH_CONTROL_BUS_NAME        "CFGBUS"
 #define BENCH_CONTROL_DEFAULT_ADDRESS 0x40000000U
 #define BENCH_CONTROL_REGS_SIZE       4

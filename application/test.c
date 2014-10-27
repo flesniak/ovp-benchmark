@@ -16,20 +16,23 @@ int main() {
   volatile unsigned int* data = (unsigned int*)BENCH_DATA_DEFAULT_ADDRESS;
 
   printf("Initializing memory...\n");
-  writeData(data, 0xDEADBEEF); //write out data once to allocate icm memory
-  TIMES(100000);
+  //writeData(data, 0xDEADBEEF); //write out data once to allocate icm memory
+
+  TIMES(100000) asm("nop");
 
   printf("Benchmark calibrating...\n");
   *ctrl = BENCH_CALIBRATE_MASK;
   TIMES(10000) *ctrl = 0;
   *ctrl = BENCH_CALIBRATE_MASK;
 
-  TIMES(100000);
+  TIMES(100000) asm("nop");
 
-  /*printf("Callback test\n");
+  printf("Callback test\n"); //to callback test last because callbacks can't be closed
   *ctrl = BENCH_TEST_CALLBACK_MASK;
-  writeData(data);
-  *ctrl = BENCH_TEST_CALLBACK_MASK;*/
+  writeData(data, 0xB00B1E5);
+  *ctrl = BENCH_TEST_CALLBACK_MASK;
+
+  TIMES(100000) asm("nop");
 
   printf("Runtime copy test\n");
   *ctrl = BENCH_TEST_RTCOPY_MASK;
@@ -37,7 +40,7 @@ int main() {
   putchar('\n'); fflush(stdout);
   *ctrl = BENCH_TEST_RTCOPY_MASK;
 
-  TIMES(100000);
+  TIMES(100000) asm("nop");
 
   printf("Native mapping test\n");
   *ctrl = BENCH_TEST_NATIVE_MASK;

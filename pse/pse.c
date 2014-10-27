@@ -1,9 +1,10 @@
 #include <peripheral/bhm.h>
-//#include <string.h>
 
 #include "byteswap.h"
 #include "bench.igen.h"
 #include "../bench.h"
+
+unsigned char buffer[BENCH_DATA_SIZE];
 
 void calibrate(int enable) {
   bhmMessage("F", "BENCH_PSE", "Failed to intercept : calibrate");
@@ -13,7 +14,7 @@ void dummyCallback() {
   bhmMessage("F", "BENCH_PSE", "Failed to intercept : dummyCallback");
 }
 
-void testCallback(int enable) {
+void testCallback(int enable, unsigned int bufAddr) {
   bhmMessage("F", "BENCH_PSE", "Failed to intercept : testCallback");
 }
 
@@ -34,8 +35,8 @@ void writeData(void* addr, Uns32 data) {
 }
 
 PPM_WRITE_CB(changeCallback) {
-  bhmMessage("I", "BENCH_PSE", "WRITE_CB at 0x%08x data 0x%08x", (Uns32)addr, data);
-  writeData(addr-BENCH_DATA_DEFAULT_ADDRESS, data);
+  //bhmMessage("I", "BENCH_PSE", "WRITE_CB at 0x%08x data 0x%08x buffer 0x%08x", (Uns32)addr, data, (unsigned int)buffer);
+  writeData(addr, data);
 }
 
 PPM_REG_READ_CB(readReg) {
@@ -62,13 +63,15 @@ PPM_REG_WRITE_CB(writeReg) {
           CFGBUS_AB0_data.CONTROL.bits.CALIBRATE = 0;
         }
         break;
-      case BENCH_TEST_CALLBACK_MASK:
+      case BENCH_TEST_CALLBACK_MASK: bhmMessage("I", "BENCH_PSE", "Callback test");
         if( !CFGBUS_AB0_data.CONTROL.bits.TEST_CALLBACK ) { //start test
           CFGBUS_AB0_data.CONTROL.bits.TEST_CALLBACK = 1; //memorize current test
-          ppmInstallChangeCallback(changeCallback, 0, (void*)BENCH_DATA_DEFAULT_ADDRESS, BENCH_DATA_SIZE);
-          testCallback(1);
+          ppmCreateDynamicSlavePort(BENCH_DATA_BUS_NAME, BENCH_DATA_DEFAULT_ADDRESS, BENCH_DATA_SIZE, buffer);
+          ppmInstallChangeCallback(changeCallback, (void*)0, buffer, BENCH_DATA_SIZE);
+          testCallback(1, (unsigned int)buffer);
         } else { //end test
-          testCallback(0);
+          ppmDeleteDynamicSlavePort(BENCH_DATA_BUS_NAME, BENCH_DATA_DEFAULT_ADDRESS, BENCH_DATA_SIZE);
+          testCallback(0, 0);
           CFGBUS_AB0_data.CONTROL.bits.TEST_CALLBACK = 0;
         }
         break;
@@ -81,7 +84,7 @@ PPM_REG_WRITE_CB(writeReg) {
           CFGBUS_AB0_data.CONTROL.bits.TEST_RTCOPY = 0;
         }
         break;
-      case BENCH_TEST_NATIVE_MASK: bhmMessage("I", "BENCH_PSE", "call to native");
+      case BENCH_TEST_NATIVE_MASK:
         if( !CFGBUS_AB0_data.CONTROL.bits.TEST_NATIVE ) { //start test
           CFGBUS_AB0_data.CONTROL.bits.TEST_NATIVE = 1; //memorize current test
           testNative(1);
@@ -101,7 +104,6 @@ PPM_REG_WRITE_CB(writeReg) {
 PPM_CONSTRUCTOR_CB(constructor) {
   bhmMessage("I", "BENCH_PSE", "Constructing");
   periphConstructor();
-  //ppmOpenSlaveBusPort(BENCH_DATA_BUS_NAME, (void*)BENCH_DATA_DEFAULT_ADDRESS, BENCH_DATA_SIZE);
 }
 
 PPM_DESTRUCTOR_CB(destructor) {
