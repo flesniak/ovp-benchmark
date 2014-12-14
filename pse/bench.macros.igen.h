@@ -4,7 +4,7 @@
 //                W R I T T E N   B Y   I M P E R A S   I G E N
 //
 //                             Version 20131018.0
-//                          Sat Oct 25 01:27:59 2014
+//                          Mon Nov 10 12:42:21 2014
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -30,6 +30,7 @@
 #define CFGBUS_AB0_CONTROL_TEST_CALLBACK   (0x1 << 1)
 #define CFGBUS_AB0_CONTROL_TEST_RTCOPY   (0x1 << 2)
 #define CFGBUS_AB0_CONTROL_TEST_NATIVE   (0x1 << 3)
+#define CFGBUS_AB0_CONTROL_GENERIC_TIME   (0x1 << 30)
 #define CFGBUS_AB0_CONTROL_ISSUE_COPY   (0x1 << 31)
 
 

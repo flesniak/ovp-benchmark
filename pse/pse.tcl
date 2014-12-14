@@ -13,6 +13,8 @@ iadddocumentation   -name Description -text "OVP guest-to-host benchmark periphe
       iadddocumentation -name Description -text "Test vmiRt copying"
     imodeladdfield        -name TEST_NATIVE   -bitoffset 3 -width 1 -access rw
       iadddocumentation -name Description -text "Test native memory"
+    imodeladdfield        -name GENERIC_TIME  -bitoffset 30 -width 1 -access rw
+      iadddocumentation -name Description -text "Just measure time between two writes"
     imodeladdfield        -name ISSUE_COPY    -bitoffset 31 -width 1 -access rw
       iadddocumentation -name Description -text "Issue a vmirt copy"
 

@@ -26,6 +26,10 @@ void testNative(int enable) {
   bhmMessage("F", "BENCH_PSE", "Failed to intercept : testNative");
 }
 
+void genericTime(int enable) {
+  bhmMessage("F", "BENCH_PSE", "Failed to intercept : genericTime");
+}
+
 void copyCallback() {
   bhmMessage("F", "BENCH_PSE", "Failed to intercept : copyCallback");
 }
@@ -91,6 +95,15 @@ PPM_REG_WRITE_CB(writeReg) {
         } else { //end test
           testNative(0);
           CFGBUS_AB0_data.CONTROL.bits.TEST_NATIVE = 0;
+        }
+        break;
+      case BENCH_GENERIC_TIME_MASK:
+        if( !CFGBUS_AB0_data.CONTROL.bits.GENERIC_TIME ) { //start test
+          CFGBUS_AB0_data.CONTROL.bits.GENERIC_TIME = 1;
+          genericTime(1);
+        } else { //end test
+          genericTime(0);
+          CFGBUS_AB0_data.CONTROL.bits.GENERIC_TIME = 0;
         }
         break;
       case BENCH_ISSUE_COPY_MASK:

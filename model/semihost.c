@@ -114,7 +114,7 @@ static VMIOS_INTERCEPT_FN(testCallback) {
   } else { //end test
     gettimeofday(&object->end, 0);
     Uns32 diff = timevalDiff(&object->start, &object->end);
-    vmiMessage("I", "BENCH_SH", "Wrote %d bytes in %f seconds, equals %f MiB/s", object->bytesWritten, (double)(diff-object->calibration)/1000000, (double)1.04858*object->bytesWritten/(diff-object->calibration));
+    vmiMessage("I", "BENCH_SH", "Wrote %d bytes in %f seconds, equals %f MiB/s", object->bytesWritten, (double)(diff-2*object->calibration)/1000000, (double)1.04858*object->bytesWritten/(diff-2*object->calibration));
     mapMemory(object, 0);
   }
 }
@@ -128,7 +128,7 @@ static VMIOS_INTERCEPT_FN(testRtcopy) {
   } else { //end test
     gettimeofday(&object->end, 0);
     Uns32 diff = timevalDiff(&object->start, &object->end);
-    vmiMessage("I", "BENCH_SH", "Wrote %d bytes in %f seconds, equals %f MiB/s", object->bytesWritten, (double)(diff-object->calibration)/1000000, (double)1.04858*object->bytesWritten/(diff-object->calibration));
+    vmiMessage("I", "BENCH_SH", "Wrote %d bytes in %f seconds, equals %f MiB/s", object->bytesWritten, (double)(diff-2*object->calibration)/1000000, (double)1.04858*object->bytesWritten/(diff-2*object->calibration));
   }
 }
 
@@ -144,7 +144,19 @@ static VMIOS_INTERCEPT_FN(testNative) {
     mapMemory(object, 0);
     object->bytesWritten = 10*BENCH_DATA_SIZE;
     Uns32 diff = timevalDiff(&object->start, &object->end);
-    vmiMessage("I", "BENCH_SH", "Wrote %d bytes in %f seconds, equals %f MiB/s", object->bytesWritten, (double)(diff-object->calibration)/1000000, (double)1.04858*object->bytesWritten/(diff-object->calibration));
+    vmiMessage("I", "BENCH_SH", "Wrote %d bytes in %f seconds, equals %f MiB/s", object->bytesWritten, (double)(diff-2*object->calibration)/1000000, (double)1.04858*object->bytesWritten/(diff-2*object->calibration));
+  }
+}
+
+static VMIOS_INTERCEPT_FN(genericTime) {
+  Uns32 enable = 0, index = 0;
+  GET_ARG(processor, object, index, enable);
+  if( enable ) { //start test
+    gettimeofday(&object->start, 0);
+  } else { //end test
+    gettimeofday(&object->end, 0);
+    Uns32 diff = timevalDiff(&object->start, &object->end);
+    vmiMessage("I", "BENCH_SH", "Measured time: %f seconds (%u microseconds)", (double)(diff-2*object->calibration)/1000000, diff-object->calibration*2);
   }
 }
 
@@ -215,6 +227,7 @@ vmiosAttr modelAttrs = {
         {"testRtcopy",         0,       True,   testRtcopy        },
         {"testNative",         0,       True,   testNative        },
         {"writeData",          0,       True,   writeData         },
+        {"genericTime",        0,       True,   genericTime       },
         {"copyCallback",       0,       True,   copyCallback      },
         {0}
     }

@@ -15,8 +15,19 @@ int main() {
   volatile unsigned int* ctrl = (unsigned int*)BENCH_CONTROL_DEFAULT_ADDRESS;
   volatile unsigned int* data = (unsigned int*)BENCH_DATA_DEFAULT_ADDRESS;
 
+  TIMES(100000) asm("nop");
+
   printf("Initializing memory...\n");
-  //writeData(data, 0xDEADBEEF); //write out data once to allocate icm memory
+  *ctrl = BENCH_GENERIC_TIME_MASK;
+  writeData(data, 0xDEADBEEF); //write out data once to allocate icm memory
+  *ctrl = BENCH_GENERIC_TIME_MASK;
+
+  TIMES(100000) asm("nop");
+
+  printf("Re-writing internal memory 10 times...\n");
+  *ctrl = BENCH_GENERIC_TIME_MASK;
+  TIMES(10) writeData(data, count); //write a second time (10x64MiB) to measure internal memory speed
+  *ctrl = BENCH_GENERIC_TIME_MASK;
 
   TIMES(100000) asm("nop");
 
